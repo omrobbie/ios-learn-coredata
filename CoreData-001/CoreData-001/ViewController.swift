@@ -55,6 +55,22 @@ class ViewController: UIViewController {
         }
     }
 
+    private func delete(name: String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
+
+        let manageContext = appDelegate.persistentContainer.viewContext
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
+        fetchRequest.predicate = NSPredicate.init(format: "name == %@", name)
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+
+        do {
+            try manageContext.execute(deleteRequest)
+            load()
+        } catch {
+            print("Error: Could not delete! \(error.localizedDescription)")
+        }
+    }
+
     @IBAction func btnAddNameTapped(_ sender: Any) {
         let alertVC = UIAlertController(title: "New Name", message: "Add a new name", preferredStyle: .alert)
         let actionSave = UIAlertAction(title: "Save", style: .default) { [unowned self] (_) in
@@ -91,5 +107,16 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        let person = persons[indexPath.row]
+
+        if editingStyle == .delete {
+            if let name = person.value(forKey: "name") as? String {
+                delete(name: name)
+                tableView.deleteRows(at: [indexPath], with: .fade)
+            }
+        }
     }
 }
