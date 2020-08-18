@@ -7,15 +7,33 @@
 //
 
 import UIKit
+import CoreData
 
 class ViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
 
-    var persons: [String] = []
+    var persons: [NSManagedObject] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+
+    private func save(name: String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
+
+        let manageContext = appDelegate.persistentContainer.viewContext
+        let entity = NSEntityDescription.entity(forEntityName: "Person", in: manageContext)!
+        let person = NSManagedObject(entity: entity, insertInto: manageContext)
+
+        person.setValue(name, forKey: "name")
+
+        do {
+            try manageContext.save()
+            persons.append(person)
+        } catch {
+            print("Error: Could not save! \(error.localizedDescription)")
+        }
     }
 
     @IBAction func btnAddNameTapped(_ sender: Any) {
@@ -26,7 +44,7 @@ class ViewController: UIViewController {
                     return
             }
 
-            self.persons.append(nameToSave)
+            self.save(name: nameToSave)
             self.tableView.reloadData()
         }
         let actionCancel = UIAlertAction(title: "Cancel", style: .cancel)
@@ -48,7 +66,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         let item = persons[indexPath.row]
-        cell.textLabel?.text = item
+        cell.textLabel?.text = item.value(forKey: "name") as? String
         return cell
     }
 
