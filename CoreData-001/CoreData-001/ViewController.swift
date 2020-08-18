@@ -17,6 +17,12 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        load()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        load()
     }
 
     private func save(name: String) {
@@ -33,6 +39,19 @@ class ViewController: UIViewController {
             persons.append(person)
         } catch {
             print("Error: Could not save! \(error.localizedDescription)")
+        }
+    }
+
+    private func load() {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
+
+        let manageContext = appDelegate.persistentContainer.viewContext
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Person")
+
+        do {
+            persons = try manageContext.fetch(fetchRequest)
+        } catch {
+            print("Error: Could not fetch! \(error.localizedDescription)")
         }
     }
 
